@@ -2,45 +2,42 @@
 set -e  # exit immediately on error
 set -x  # display all commands
 
-cd third_party;
+ROOT_DIR=`pwd`
 
-if [ ! -f protobuf/bin/protoc ]; then
-	if [ ! -f protobuf-cpp-3.0.0.tar.gz ]; then
-		wget https://github.com/google/protobuf/releases/download/v3.0.0/protobuf-cpp-3.0.0.tar.gz
-	fi	
-
-	tar zxvf protobuf-cpp-3.0.0.tar.gz
-	cd protobuf-3.0.0
-
-	./configure --prefix=`pwd`/../protobuf
-	make -j2
-	make install
-
-	cd ../
-fi
-
-if [ ! -f leveldb/lib/libleveldb.a ]; then
-	if [ ! -f v1.19.tar.gz ]; then
-		wget https://github.com/google/leveldb/archive/v1.19.tar.gz
-	fi
-
-	rm -rf leveldb
-
-	tar zxvf v1.19.tar.gz
-	ln -s leveldb-1.19 leveldb
-	cd leveldb
-
-	make
-
-	mkdir -p lib
-	cp out-static/libleveldb.a lib/
-
-	cd ../
-fi
-
-cd ..
-
-./autoinstall.sh
+cd third_party/leveldb
 
 make
 
+mkdir lib;cd lib;ln -s ../libleveldb.a libleveldb.a
+
+cd $ROOT_DIR/third_party/protobuf
+
+./autogen.sh
+
+./configure CXXFLAGS=-fPIC --prefix=`pwd`
+
+make && make install
+
+cd $ROOT_DIR
+
+./autoinstall.sh
+
+make && make install
+
+cd third_party/glog
+
+./configure CXXFLAGS=-fPIC --prefix=`pwd`
+
+make && make install
+
+cd $ROOT_DIR/plugin
+
+make && make install
+
+cd $ROOT_DIR/sample/phxecho; make; mkdir -p log
+
+cd $ROOT_DIR/sample/phxelection; make; mkdir -p log
+
+cd $ROOT_DIR
+
+echo "Install Phxpaxos Successfull"
